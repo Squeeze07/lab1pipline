@@ -11,6 +11,7 @@ struct Pipe
     double length = 0;
     int diameter = 0;
     bool isUnderRepair = false;
+    bool pipeExists = false;
 };
 
 // Данные компрессорной станции
@@ -20,6 +21,7 @@ struct CompressorStation
     int totalWorkshops = 0;
     int workingWorkshops = 0;
     int stationClass = 0;
+    bool stationExists = false;
 };
 
 // Чтение целого числа с проверкой
@@ -104,6 +106,7 @@ void InputPipe(Pipe& pipe)
     }
 
     pipe.isUnderRepair = repairAnswer == 1;
+    pipe.pipeExists = true;
 }
 
 void InputStation(CompressorStation& station)
@@ -135,10 +138,18 @@ void InputStation(CompressorStation& station)
         cout << "Ошибка. Введите число от 1 до 3: ";
         station.stationClass = ReadInt();
     }
+
+    station.stationExists = true;
 }
 
 void PrintPipe(const Pipe& pipe)
 {
+    if (!pipe.pipeExists)
+    {
+        cout << "Труба не добавлена.\n";
+        return;
+    }
+
     cout << "\nИнформация о трубе\n";
     cout << "Название: " << pipe.name << '\n';
     cout << "Длина: " << pipe.length << " км\n";
@@ -148,6 +159,12 @@ void PrintPipe(const Pipe& pipe)
 
 void PrintStation(const CompressorStation& station)
 {
+    if (!station.stationExists)
+    {
+        cout << "Компрессорная станция не добавлена.\n";
+        return;
+    }
+
     cout << "\nИнформация о компрессорной станции\n";
     cout << "Название: " << station.name << '\n';
     cout << "Общее количество цехов: " << station.totalWorkshops << '\n';
@@ -157,9 +174,16 @@ void PrintStation(const CompressorStation& station)
 
 void EditPipe(Pipe& pipe)
 {
+    if (!pipe.pipeExists)
+    {
+        cout << "Сначала добавьте трубу.\n";
+        return;
+    }
+
+    cout << "Выберите действие: ";
     cout << "\n0. Убрать трубу из ремонта\n";
     cout << "1. Отправить трубу в ремонт\n";
-    cout << "Выберите действие: ";
+
     int action = ReadInt();
 
     while (action != 0 && action != 1)
@@ -174,6 +198,12 @@ void EditPipe(Pipe& pipe)
 
 void EditStation(CompressorStation& station)
 {
+    if (!station.stationExists)
+    {
+        cout << "Сначала добавьте компрессорную станцию.\n";
+        return;
+    }
+
     cout << "\n1. Запустить один цех\n";
     cout << "2. Остановить один цех\n";
     cout << "Выберите действие: ";
@@ -212,9 +242,9 @@ void EditStation(CompressorStation& station)
 }
 
 // Труба и станция записываются в один общий файл
-void SaveData(const Pipe& pipe, bool pipeExists, const CompressorStation& station, bool stationExists)
+void SaveData(const Pipe& pipe, const CompressorStation& station)
 {
-    if (!pipeExists && !stationExists)
+    if (!pipe.pipeExists && !station.stationExists)
     {
         cout << "Нет данных для сохранения.\n";
         return;
@@ -227,8 +257,8 @@ void SaveData(const Pipe& pipe, bool pipeExists, const CompressorStation& statio
         return;
     }
 
-    file << pipeExists << '\n';
-    if (pipeExists)
+    file << pipe.pipeExists << '\n';
+    if (pipe.pipeExists)
     {
         file << pipe.name << '\n';
         file << pipe.length << '\n';
@@ -236,8 +266,8 @@ void SaveData(const Pipe& pipe, bool pipeExists, const CompressorStation& statio
         file << pipe.isUnderRepair << '\n';
     }
 
-    file << stationExists << '\n';
-    if (stationExists)
+    file << station.stationExists << '\n';
+    if (station.stationExists)
     {
         file << station.name << '\n';
         file << station.totalWorkshops << '\n';
@@ -250,7 +280,7 @@ void SaveData(const Pipe& pipe, bool pipeExists, const CompressorStation& statio
 }
 
 // Все данные читаются из одного общего файла
-void LoadData(Pipe& pipe, bool& pipeExists, CompressorStation& station, bool& stationExists)
+void LoadData(Pipe& pipe, CompressorStation& station)
 {
     ifstream file("data.txt");
     if (!file.is_open())
@@ -313,18 +343,10 @@ void LoadData(Pipe& pipe, bool& pipeExists, CompressorStation& station, bool& st
 
     file.close();
 
-    pipeExists = pipeFlag == 1;
-    stationExists = stationFlag == 1;
-
-    if (pipeExists)
-    {
-        pipe = loadedPipe;
-    }
-
-    if (stationExists)
-    {
-        station = loadedStation;
-    }
+    loadedPipe.pipeExists = pipeFlag == 1;
+    loadedStation.stationExists = stationFlag == 1;
+    pipe = loadedPipe;
+    station = loadedStation;
 
     cout << "Данные загружены из data.txt.\n";
 }
@@ -345,8 +367,6 @@ int main()
 {
     Pipe pipe;
     CompressorStation station;
-    bool pipeExists = false;
-    bool stationExists = false;
 
     while (true)
     {
@@ -364,62 +384,31 @@ int main()
         {
             case 1:
                 InputPipe(pipe);
-                pipeExists = true;
                 break;
 
             case 2:
                 InputStation(station);
-                stationExists = true;
                 break;
 
             case 3:
-                if (pipeExists)
-                {
-                    PrintPipe(pipe);
-                }
-                else
-                {
-                    cout << "Труба не добавлена.\n";
-                }
-
-                if (stationExists)
-                {
-                    PrintStation(station);
-                }
-                else
-                {
-                    cout << "Компрессорная станция не добавлена.\n";
-                }
+                PrintPipe(pipe);
+                PrintStation(station);
                 break;
 
             case 4:
-                if (pipeExists)
-                {
-                    EditPipe(pipe);
-                }
-                else
-                {
-                    cout << "Сначала добавьте трубу.\n";
-                }
+                EditPipe(pipe);
                 break;
 
             case 5:
-                if (stationExists)
-                {
-                    EditStation(station);
-                }
-                else
-                {
-                    cout << "Сначала добавьте компрессорную станцию.\n";
-                }
+                EditStation(station);
                 break;
 
             case 6:
-                SaveData(pipe, pipeExists, station, stationExists);
+                SaveData(pipe, station);
                 break;
 
             case 7:
-                LoadData(pipe, pipeExists, station, stationExists);
+                LoadData(pipe, station);
                 break;
 
             case 0:
