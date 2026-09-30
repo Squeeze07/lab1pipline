@@ -131,11 +131,12 @@ void InputStation(CompressorStation& station)
         station.workingWorkshops = ReadInt();
     }
 
-    cout << "Введите класс станции (1, 2 или 3): ";
+    cout << "Введите класс станции: ";
     station.stationClass = ReadInt();
-    while (station.stationClass < 1 || station.stationClass > 3)
+
+    while (station.stationClass <= 0)
     {
-        cout << "Ошибка. Введите число от 1 до 3: ";
+        cout << "Ошибка. Класс станции должен быть больше 0: ";
         station.stationClass = ReadInt();
     }
 
@@ -293,7 +294,6 @@ void SaveData(const Pipe& pipe, const CompressorStation& station)
 bool LoadPipe(ifstream& file, Pipe& pipe)
 {
     int pipeFlag;
-    int repairValue;
 
     file >> pipeFlag;
     if (file.fail() || (pipeFlag != 0 && pipeFlag != 1))
@@ -308,15 +308,13 @@ bool LoadPipe(ifstream& file, Pipe& pipe)
         getline(file, pipe.name);
         file >> pipe.length;
         file >> pipe.diameter;
-        file >> repairValue;
+        file >> pipe.isUnderRepair;
 
-        if (file.fail() || pipe.name.empty() || pipe.length <= 0 || pipe.diameter <= 0 || (repairValue != 0 && repairValue != 1))
+        if (file.fail() || pipe.name.empty() || pipe.length <= 0 || pipe.diameter <= 0)
         {
             cout << "Данные трубы в файле повреждены.\n";
             return false;
         }
-
-        pipe.isUnderRepair = repairValue == 1;
     }
 
     pipe.pipeExists = pipeFlag == 1;
@@ -342,7 +340,7 @@ bool LoadStation(ifstream& file, CompressorStation& station)
         file >> station.workingWorkshops;
         file >> station.stationClass;
 
-        if (file.fail() || station.name.empty() || station.totalWorkshops <= 0 || station.workingWorkshops < 0 || station.workingWorkshops > station.totalWorkshops || station.stationClass < 1 || station.stationClass > 3)
+        if (file.fail() || station.name.empty() || station.totalWorkshops <= 0 || station.workingWorkshops < 0 || station.workingWorkshops > station.totalWorkshops || station.stationClass <= 0)
         {
             cout << "Данные станции в файле повреждены.\n";
             return false;
