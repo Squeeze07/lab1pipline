@@ -241,6 +241,32 @@ void EditStation(CompressorStation& station)
     }
 }
 
+void SavePipe(ofstream& file, const Pipe& pipe)
+{
+    file << pipe.pipeExists << '\n';
+
+    if (pipe.pipeExists)
+    {
+        file << pipe.name << '\n';
+        file << pipe.length << '\n';
+        file << pipe.diameter << '\n';
+        file << pipe.isUnderRepair << '\n';
+    }
+}
+
+void SaveStation(ofstream& file, const CompressorStation& station)
+{
+    file << station.stationExists << '\n';
+
+    if (station.stationExists)
+    {
+        file << station.name << '\n';
+        file << station.totalWorkshops << '\n';
+        file << station.workingWorkshops << '\n';
+        file << station.stationClass << '\n';
+    }
+}
+
 // Труба и станция записываются в один общий файл
 void SaveData(const Pipe& pipe, const CompressorStation& station)
 {
@@ -257,26 +283,74 @@ void SaveData(const Pipe& pipe, const CompressorStation& station)
         return;
     }
 
-    file << pipe.pipeExists << '\n';
-    if (pipe.pipeExists)
-    {
-        file << pipe.name << '\n';
-        file << pipe.length << '\n';
-        file << pipe.diameter << '\n';
-        file << pipe.isUnderRepair << '\n';
-    }
-
-    file << station.stationExists << '\n';
-    if (station.stationExists)
-    {
-        file << station.name << '\n';
-        file << station.totalWorkshops << '\n';
-        file << station.workingWorkshops << '\n';
-        file << station.stationClass << '\n';
-    }
+    SavePipe(file, pipe);
+    SaveStation(file, station);
 
     file.close();
     cout << "Данные сохранены в data.txt.\n";
+}
+
+bool LoadPipe(ifstream& file, Pipe& pipe)
+{
+    int pipeFlag;
+    int repairValue;
+
+    file >> pipeFlag;
+    if (file.fail() || (pipeFlag != 0 && pipeFlag != 1))
+    {
+        cout << "Ошибка чтения data.txt.\n";
+        return false;
+    }
+    file.ignore(10000, '\n');
+
+    if (pipeFlag == 1)
+    {
+        getline(file, pipe.name);
+        file >> pipe.length;
+        file >> pipe.diameter;
+        file >> repairValue;
+
+        if (file.fail() || pipe.name.empty() || pipe.length <= 0 || pipe.diameter <= 0 || (repairValue != 0 && repairValue != 1))
+        {
+            cout << "Данные трубы в файле повреждены.\n";
+            return false;
+        }
+
+        pipe.isUnderRepair = repairValue == 1;
+    }
+
+    pipe.pipeExists = pipeFlag == 1;
+    return true;
+}
+
+bool LoadStation(ifstream& file, CompressorStation& station)
+{
+    int stationFlag;
+
+    file >> stationFlag;
+    if (file.fail() || (stationFlag != 0 && stationFlag != 1))
+    {
+        cout << "Ошибка чтения data.txt.\n";
+        return false;
+    }
+    file.ignore(10000, '\n');
+
+    if (stationFlag == 1)
+    {
+        getline(file, station.name);
+        file >> station.totalWorkshops;
+        file >> station.workingWorkshops;
+        file >> station.stationClass;
+
+        if (file.fail() || station.name.empty() || station.totalWorkshops <= 0 || station.workingWorkshops < 0 || station.workingWorkshops > station.totalWorkshops || station.stationClass < 1 || station.stationClass > 3)
+        {
+            cout << "Данные станции в файле повреждены.\n";
+            return false;
+        }
+    }
+
+    station.stationExists = stationFlag == 1;
+    return true;
 }
 
 // Все данные читаются из одного общего файла
@@ -291,60 +365,13 @@ void LoadData(Pipe& pipe, CompressorStation& station)
 
     Pipe loadedPipe;
     CompressorStation loadedStation;
-    int pipeFlag;
-    int stationFlag;
-    int repairValue;
 
-    file >> pipeFlag;
-    if (file.fail() || (pipeFlag != 0 && pipeFlag != 1))
+    if (!LoadPipe(file, loadedPipe) || !LoadStation(file, loadedStation))
     {
-        cout << "Ошибка чтения data.txt.\n";
         return;
-    }
-    file.ignore(10000, '\n');
-
-    if (pipeFlag == 1)
-    {
-        getline(file, loadedPipe.name);
-        file >> loadedPipe.length;
-        file >> loadedPipe.diameter;
-        file >> repairValue;
-
-        if (file.fail() || loadedPipe.name.empty() || loadedPipe.length <= 0 || loadedPipe.diameter <= 0 || (repairValue != 0 && repairValue != 1))
-        {
-            cout << "Данные трубы в файле повреждены.\n";
-            return;
-        }
-
-        loadedPipe.isUnderRepair = repairValue == 1;
-    }
-
-    file >> stationFlag;
-    if (file.fail() || (stationFlag != 0 && stationFlag != 1))
-    {
-        cout << "Ошибка чтения data.txt.\n";
-        return;
-    }
-    file.ignore(10000, '\n');
-
-    if (stationFlag == 1)
-    {
-        getline(file, loadedStation.name);
-        file >> loadedStation.totalWorkshops;
-        file >> loadedStation.workingWorkshops;
-        file >> loadedStation.stationClass;
-
-        if (file.fail() || loadedStation.name.empty() || loadedStation.totalWorkshops <= 0 || loadedStation.workingWorkshops < 0 || loadedStation.workingWorkshops > loadedStation.totalWorkshops || loadedStation.stationClass < 1 || loadedStation.stationClass > 3)
-        {
-            cout << "Данные станции в файле повреждены.\n";
-            return;
-        }
     }
 
     file.close();
-
-    loadedPipe.pipeExists = pipeFlag == 1;
-    loadedStation.stationExists = stationFlag == 1;
     pipe = loadedPipe;
     station = loadedStation;
 
