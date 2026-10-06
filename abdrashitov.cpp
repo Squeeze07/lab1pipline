@@ -11,7 +11,6 @@ struct Pipe
     double length = 0;
     int diameter = 0;
     bool isUnderRepair = false;
-    bool pipeExists = false;
 };
 
 // Данные компрессорной станции
@@ -21,7 +20,6 @@ struct CompressorStation
     int totalWorkshops = 0;
     int workingWorkshops = 0;
     int stationClass = 0;
-    bool stationExists = false;
 };
 
 // Чтение целого числа с проверкой
@@ -106,7 +104,6 @@ void InputPipe(Pipe& pipe)
     }
 
     pipe.isUnderRepair = repairAnswer == 1;
-    pipe.pipeExists = true;
 }
 
 void InputStation(CompressorStation& station)
@@ -140,12 +137,11 @@ void InputStation(CompressorStation& station)
         station.stationClass = ReadInt();
     }
 
-    station.stationExists = true;
 }
 
 void PrintPipe(const Pipe& pipe)
 {
-    if (!pipe.pipeExists)
+    if (pipe.name.empty())
     {
         cout << "Труба не добавлена.\n";
         return;
@@ -160,7 +156,7 @@ void PrintPipe(const Pipe& pipe)
 
 void PrintStation(const CompressorStation& station)
 {
-    if (!station.stationExists)
+    if (station.name.empty())
     {
         cout << "Компрессорная станция не добавлена.\n";
         return;
@@ -175,7 +171,7 @@ void PrintStation(const CompressorStation& station)
 
 void EditPipe(Pipe& pipe)
 {
-    if (!pipe.pipeExists)
+    if (pipe.name.empty())
     {
         cout << "Сначала добавьте трубу.\n";
         return;
@@ -199,7 +195,7 @@ void EditPipe(Pipe& pipe)
 
 void EditStation(CompressorStation& station)
 {
-    if (!station.stationExists)
+    if (station.name.empty())
     {
         cout << "Сначала добавьте компрессорную станцию.\n";
         return;
@@ -244,9 +240,9 @@ void EditStation(CompressorStation& station)
 
 void SavePipe(ofstream& file, const Pipe& pipe)
 {
-    file << pipe.pipeExists << '\n';
+    file << !pipe.name.empty() << '\n';
 
-    if (pipe.pipeExists)
+    if (!pipe.name.empty())
     {
         file << pipe.name << '\n';
         file << pipe.length << '\n';
@@ -257,9 +253,9 @@ void SavePipe(ofstream& file, const Pipe& pipe)
 
 void SaveStation(ofstream& file, const CompressorStation& station)
 {
-    file << station.stationExists << '\n';
+    file << !station.name.empty() << '\n';
 
-    if (station.stationExists)
+    if (!station.name.empty())
     {
         file << station.name << '\n';
         file << station.totalWorkshops << '\n';
@@ -271,7 +267,7 @@ void SaveStation(ofstream& file, const CompressorStation& station)
 // Труба и станция записываются в один общий файл
 void SaveData(const Pipe& pipe, const CompressorStation& station)
 {
-    if (!pipe.pipeExists && !station.stationExists)
+    if (pipe.name.empty() && station.name.empty())
     {
         cout << "Нет данных для сохранения.\n";
         return;
@@ -317,7 +313,11 @@ bool LoadPipe(ifstream& file, Pipe& pipe)
         }
     }
 
-    pipe.pipeExists = pipeFlag == 1;
+    if (pipeFlag == 0)
+    {
+        pipe = Pipe{};
+    }
+
     return true;
 }
 
@@ -347,7 +347,11 @@ bool LoadStation(ifstream& file, CompressorStation& station)
         }
     }
 
-    station.stationExists = stationFlag == 1;
+    if (stationFlag == 0)
+    {
+        station = CompressorStation{};
+    }
+
     return true;
 }
 
