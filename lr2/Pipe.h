@@ -14,7 +14,7 @@ private:
     bool underRepair_;
 
 public:
-    Pipe(int id = 0);
+    explicit Pipe(int id = 0);
 
     int GetId() const;
     const std::string& GetName() const;
@@ -23,8 +23,8 @@ public:
 
     void Input();
     void Print() const;
-    void Save(std::ofstream& file) const;
-    bool Load(std::ifstream& file);
+    friend std::ofstream& operator<<(std::ofstream& file, const Pipe& pipe);
+    friend std::ifstream& operator>>(std::ifstream& file, Pipe& pipe);
 };
 
 #endif

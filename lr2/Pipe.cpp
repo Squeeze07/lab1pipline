@@ -46,22 +46,27 @@ void Pipe::Print() const
          << diameter_ << " мм, в ремонте: " << (underRepair_ ? "да" : "нет") << '\n';
 }
 
-void Pipe::Save(ofstream& file) const
+ofstream& operator<<(ofstream& file, const Pipe& pipe)
 {
-    file << id_ << '\n' << name_ << '\n' << length_ << '\n'
-         << diameter_ << '\n' << underRepair_ << '\n';
+    file << pipe.id_ << '\n' << pipe.name_ << '\n' << pipe.length_ << '\n'
+         << pipe.diameter_ << '\n' << pipe.underRepair_ << '\n';
+    return file;
 }
 
-bool Pipe::Load(ifstream& file)
+ifstream& operator>>(ifstream& file, Pipe& pipe)
 {
     int repair;
-    file >> id_;
+    file >> pipe.id_;
     file.ignore(10000, '\n');
-    getline(file, name_);
-    file >> length_ >> diameter_ >> repair;
-    if (file.fail() || id_ <= 0 || name_.empty() || length_ <= 0 ||
-        diameter_ <= 0 || (repair != 0 && repair != 1)) return false;
-    underRepair_ = repair == 1;
+    getline(file, pipe.name_);
+    file >> pipe.length_ >> pipe.diameter_ >> repair;
+    if (file.fail() || pipe.id_ <= 0 || pipe.name_.empty() || pipe.length_ <= 0 ||
+        pipe.diameter_ <= 0 || (repair != 0 && repair != 1))
+    {
+        file.setstate(ios::failbit);
+        return file;
+    }
+    pipe.underRepair_ = repair == 1;
     file.ignore(10000, '\n');
-    return true;
+    return file;
 }

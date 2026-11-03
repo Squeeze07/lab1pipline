@@ -4,43 +4,47 @@
 
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <set>
 #include <string>
-#include <vector>
 
 using namespace std;
 
-int FindPipe(const vector<Pipe>& pipes, int id)
+// Отдельные фильтры: каждый отвечает только за одно условие поиска.
+bool PipeByName(const Pipe& pipe, const string& text)
 {
-    for (int i = 0; i < static_cast<int>(pipes.size()); i++)
-    {
-        if (pipes[i].GetId() == id) return i;
-    }
-    return -1;
+    return pipe.GetName().find(text) != string::npos;
 }
 
-int FindStation(const vector<CompressorStation>& stations, int id)
+bool PipeByRepair(const Pipe& pipe, bool repair)
 {
-    for (int i = 0; i < static_cast<int>(stations.size()); i++)
-    {
-        if (stations[i].GetId() == id) return i;
-    }
-    return -1;
+    return pipe.IsUnderRepair() == repair;
 }
 
-void PrintAll(const vector<Pipe>& pipes, const vector<CompressorStation>& stations)
+bool StationByName(const CompressorStation& station, const string& text)
+{
+    return station.GetName().find(text) != string::npos;
+}
+
+bool StationByIdlePercent(const CompressorStation& station, double percent)
+{
+    return station.GetIdlePercent() >= percent;
+}
+
+void PrintAll(const map<int, Pipe>& pipes, const map<int, CompressorStation>& stations)
 {
     if (pipes.empty()) cout << "Труб нет.\n";
-    for (const Pipe& pipe : pipes) pipe.Print();
+    for (const auto& item : pipes) item.second.Print();
     if (stations.empty()) cout << "Станций нет.\n";
-    for (const CompressorStation& station : stations) station.Print();
+    for (const auto& item : stations) item.second.Print();
 }
 
-void EditPipe(vector<Pipe>& pipes)
+void EditPipe(map<int, Pipe>& pipes)
 {
     cout << "ID трубы: ";
     int id = ReadInt();
-    int index = FindPipe(pipes, id);
-    if (index == -1)
+    auto it = pipes.find(id);
+    if (it == pipes.end())
     {
         cout << "Труба не найдена.\n";
         LogAction("Изменение трубы ID " + to_string(id) + ": не найдена");
@@ -53,57 +57,53 @@ void EditPipe(vector<Pipe>& pipes)
         cout << "Введите 0 или 1: ";
         answer = ReadInt();
     }
-    pipes[index].SetRepair(answer == 1);
+    it->second.SetRepair(answer == 1);
     LogAction("Изменена труба ID " + to_string(id) + ", ремонт: " + to_string(answer));
 }
 
-void EditStation(vector<CompressorStation>& stations)
+void EditStation(map<int, CompressorStation>& stations)
 {
     cout << "ID станции: ";
     int id = ReadInt();
-    int index = FindStation(stations, id);
-    if (index == -1)
+    auto it = stations.find(id);
+    if (it == stations.end())
     {
         cout << "Станция не найдена.\n";
         LogAction("Изменение станции ID " + to_string(id) + ": не найдена");
         return;
     }
-    stations[index].EditWorkshop();
+    it->second.EditWorkshop();
 }
 
-void DeletePipe(vector<Pipe>& pipes)
+void DeletePipe(map<int, Pipe>& pipes)
 {
     cout << "ID трубы для удаления: ";
     int id = ReadInt();
-    int index = FindPipe(pipes, id);
-    if (index == -1)
+    if (pipes.erase(id) == 0)
     {
         cout << "Труба не найдена.\n";
         LogAction("Удаление трубы ID " + to_string(id) + ": не найдена");
         return;
     }
-    pipes.erase(pipes.begin() + index);
     cout << "Труба удалена.\n";
     LogAction("Удалена труба ID " + to_string(id));
 }
 
-void DeleteStation(vector<CompressorStation>& stations)
+void DeleteStation(map<int, CompressorStation>& stations)
 {
     cout << "ID станции для удаления: ";
     int id = ReadInt();
-    int index = FindStation(stations, id);
-    if (index == -1)
+    if (stations.erase(id) == 0)
     {
         cout << "Станция не найдена.\n";
         LogAction("Удаление станции ID " + to_string(id) + ": не найдена");
         return;
     }
-    stations.erase(stations.begin() + index);
     cout << "Станция удалена.\n";
     LogAction("Удалена станция ID " + to_string(id));
 }
 
-vector<int> SearchPipes(const vector<Pipe>& pipes)
+set<int> SearchPipes(const map<int, Pipe>& pipes)
 {
     cout << "1 - по названию, 2 - по ремонту: ";
     int filter = ReadInt();
@@ -130,14 +130,15 @@ vector<int> SearchPipes(const vector<Pipe>& pipes)
         LogAction("Поиск труб: неверный фильтр");
         return {};
     }
-    vector<int> found;
-    for (const Pipe& pipe : pipes)
+    set<int> found;
+    for (const auto& item : pipes)
     {
-        if ((filter == 1 && pipe.GetName().find(name) != string::npos) ||
-            (filter == 2 && pipe.IsUnderRepair() == (repair == 1)))
+        const Pipe& pipe = item.second;
+        if ((filter == 1 && PipeByName(pipe, name)) ||
+            (filter == 2 && PipeByRepair(pipe, repair == 1)))
         {
             pipe.Print();
-            found.push_back(pipe.GetId());
+            found.insert(item.first);
         }
     }
     cout << "Найдено труб: " << found.size() << '\n';
@@ -145,7 +146,7 @@ vector<int> SearchPipes(const vector<Pipe>& pipes)
     return found;
 }
 
-void SearchStations(const vector<CompressorStation>& stations)
+void SearchStations(const map<int, CompressorStation>& stations)
 {
     cout << "1 - по названию, 2 - по проценту незадействованных цехов: ";
     int filter = ReadInt();
@@ -173,10 +174,11 @@ void SearchStations(const vector<CompressorStation>& stations)
         return;
     }
     int found = 0;
-    for (const CompressorStation& station : stations)
+    for (const auto& item : stations)
     {
-        if ((filter == 1 && station.GetName().find(name) != string::npos) ||
-            (filter == 2 && station.GetIdlePercent() >= percent))
+        const CompressorStation& station = item.second;
+        if ((filter == 1 && StationByName(station, name)) ||
+            (filter == 2 && StationByIdlePercent(station, percent)))
         {
             station.Print();
             found++;
@@ -186,13 +188,12 @@ void SearchStations(const vector<CompressorStation>& stations)
     LogAction("Поиск станций, фильтр " + to_string(filter) + ", найдено " + to_string(found));
 }
 
-void BatchEditPipes(vector<Pipe>& pipes)
+void BatchEditPipes(map<int, Pipe>& pipes)
 {
-    vector<int> found = SearchPipes(pipes);
+    set<int> found = SearchPipes(pipes);
     if (found.empty())
     {
         cout << "Трубы не найдены.\n";
-        LogAction("Пакетное действие: трубы не найдены");
         return;
     }
     cout << "1 - все найденные, 0 - выбрать по ID: ";
@@ -202,7 +203,7 @@ void BatchEditPipes(vector<Pipe>& pipes)
         cout << "Введите 0 или 1: ";
         all = ReadInt();
     }
-    vector<int> chosen;
+    set<int> chosen;
     if (all == 1) chosen = found;
     else
     {
@@ -212,23 +213,18 @@ void BatchEditPipes(vector<Pipe>& pipes)
             cout << "ID трубы: ";
             int id = ReadInt();
             if (id == 0) break;
-            bool inFound = false;
-            bool alreadyChosen = false;
-            for (int foundId : found) if (foundId == id) inFound = true;
-            for (int chosenId : chosen) if (chosenId == id) alreadyChosen = true;
-            if (!inFound || alreadyChosen)
+            if (found.count(id) == 0 || chosen.count(id) != 0)
             {
                 cout << "ID нет среди найденных или он уже выбран.\n";
                 LogAction("Пакетное действие: отклонён ID " + to_string(id));
                 continue;
             }
-            chosen.push_back(id);
+            chosen.insert(id);
         }
     }
     if (chosen.empty())
     {
         cout << "Ничего не выбрано.\n";
-        LogAction("Пакетное действие: ничего не выбрано");
         return;
     }
     cout << "1 - убрать из ремонта, 2 - отправить в ремонт, 3 - удалить: ";
@@ -240,15 +236,14 @@ void BatchEditPipes(vector<Pipe>& pipes)
     }
     for (int id : chosen)
     {
-        int index = FindPipe(pipes, id);
-        if (action == 3) pipes.erase(pipes.begin() + index);
-        else pipes[index].SetRepair(action == 2);
+        if (action == 3) pipes.erase(id);
+        else pipes.at(id).SetRepair(action == 2);
         LogAction("Пакетное действие " + to_string(action) + " с трубой ID " + to_string(id));
     }
     cout << "Обработано труб: " << chosen.size() << '\n';
 }
 
-void SaveData(const vector<Pipe>& pipes, const vector<CompressorStation>& stations,
+void SaveData(const map<int, Pipe>& pipes, const map<int, CompressorStation>& stations,
               int nextPipeId, int nextStationId)
 {
     cout << "Имя файла для сохранения: ";
@@ -260,18 +255,17 @@ void SaveData(const vector<Pipe>& pipes, const vector<CompressorStation>& statio
         LogAction("Сохранение " + filename + ": ошибка открытия");
         return;
     }
-    file << nextPipeId << ' ' << nextStationId << '\n';
-    file << pipes.size() << '\n';
-    for (const Pipe& pipe : pipes) pipe.Save(file);
+    file << nextPipeId << ' ' << nextStationId << '\n' << pipes.size() << '\n';
+    for (const auto& item : pipes) file << item.second;
     file << stations.size() << '\n';
-    for (const CompressorStation& station : stations) station.Save(file);
+    for (const auto& item : stations) file << item.second;
     file.close();
     if (file.fail()) cout << "Ошибка записи файла.\n";
     else cout << "Данные сохранены.\n";
     LogAction("Сохранение в " + filename + (file.fail() ? ": ошибка записи" : ": успешно"));
 }
 
-void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations,
+void LoadData(map<int, Pipe>& pipes, map<int, CompressorStation>& stations,
               int& nextPipeId, int& nextStationId)
 {
     cout << "Имя файла для загрузки: ";
@@ -283,8 +277,8 @@ void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations,
         LogAction("Загрузка " + filename + ": файл не найден");
         return;
     }
-    vector<Pipe> loadedPipes;
-    vector<CompressorStation> loadedStations;
+    map<int, Pipe> loadedPipes;
+    map<int, CompressorStation> loadedStations;
     int pipeId, stationId, pipeCount, stationCount;
     file >> pipeId >> stationId >> pipeCount;
     if (file.fail() || pipeId <= 0 || stationId <= 0 || pipeCount < 0 || pipeCount > 100000)
@@ -297,13 +291,14 @@ void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations,
     for (int i = 0; i < pipeCount; i++)
     {
         Pipe pipe;
-        if (!pipe.Load(file) || pipe.GetId() >= pipeId || FindPipe(loadedPipes, pipe.GetId()) != -1)
+        file >> pipe;
+        if (file.fail() || pipe.GetId() >= pipeId || loadedPipes.count(pipe.GetId()) != 0)
         {
             cout << "Данные трубы повреждены.\n";
             LogAction("Загрузка " + filename + ": ошибка данных трубы");
             return;
         }
-        loadedPipes.push_back(pipe);
+        loadedPipes.emplace(pipe.GetId(), pipe);
     }
     file >> stationCount;
     if (file.fail() || stationCount < 0 || stationCount > 100000)
@@ -316,14 +311,15 @@ void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations,
     for (int i = 0; i < stationCount; i++)
     {
         CompressorStation station;
-        if (!station.Load(file) || station.GetId() >= stationId ||
-            FindStation(loadedStations, station.GetId()) != -1)
+        file >> station;
+        if (file.fail() || station.GetId() >= stationId ||
+            loadedStations.count(station.GetId()) != 0)
         {
             cout << "Данные станции повреждены.\n";
             LogAction("Загрузка " + filename + ": ошибка данных станции");
             return;
         }
-        loadedStations.push_back(station);
+        loadedStations.emplace(station.GetId(), station);
     }
     pipes = loadedPipes;
     stations = loadedStations;
@@ -343,8 +339,8 @@ void PrintMenu()
 
 int main()
 {
-    vector<Pipe> pipes;
-    vector<CompressorStation> stations;
+    map<int, Pipe> pipes;
+    map<int, CompressorStation> stations;
     int nextPipeId = 1;
     int nextStationId = 1;
     while (true)
@@ -358,7 +354,7 @@ int main()
             {
                 Pipe pipe(nextPipeId);
                 pipe.Input();
-                pipes.push_back(pipe);
+                pipes.emplace(nextPipeId, pipe);
                 LogAction("Добавлена труба ID " + to_string(nextPipeId));
                 nextPipeId++;
                 break;
@@ -367,7 +363,7 @@ int main()
             {
                 CompressorStation station(nextStationId);
                 station.Input();
-                stations.push_back(station);
+                stations.emplace(nextStationId, station);
                 LogAction("Добавлена станция ID " + to_string(nextStationId));
                 nextStationId++;
                 break;

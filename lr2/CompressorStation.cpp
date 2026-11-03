@@ -77,20 +77,26 @@ void CompressorStation::EditWorkshop()
     }
 }
 
-void CompressorStation::Save(ofstream& file) const
+ofstream& operator<<(ofstream& file, const CompressorStation& station)
 {
-    file << id_ << '\n' << name_ << '\n' << totalWorkshops_ << '\n'
-         << workingWorkshops_ << '\n' << stationClass_ << '\n';
+    file << station.id_ << '\n' << station.name_ << '\n' << station.totalWorkshops_ << '\n'
+         << station.workingWorkshops_ << '\n' << station.stationClass_ << '\n';
+    return file;
 }
 
-bool CompressorStation::Load(ifstream& file)
+ifstream& operator>>(ifstream& file, CompressorStation& station)
 {
-    file >> id_;
+    file >> station.id_;
     file.ignore(10000, '\n');
-    getline(file, name_);
-    file >> totalWorkshops_ >> workingWorkshops_ >> stationClass_;
-    if (file.fail() || id_ <= 0 || name_.empty() || totalWorkshops_ <= 0 ||
-        workingWorkshops_ < 0 || workingWorkshops_ > totalWorkshops_ || stationClass_ <= 0) return false;
+    getline(file, station.name_);
+    file >> station.totalWorkshops_ >> station.workingWorkshops_ >> station.stationClass_;
+    if (file.fail() || station.id_ <= 0 || station.name_.empty() || station.totalWorkshops_ <= 0 ||
+        station.workingWorkshops_ < 0 || station.workingWorkshops_ > station.totalWorkshops_ ||
+        station.stationClass_ <= 0)
+    {
+        file.setstate(ios::failbit);
+        return file;
+    }
     file.ignore(10000, '\n');
-    return true;
+    return file;
 }

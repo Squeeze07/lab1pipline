@@ -14,7 +14,7 @@ private:
     int stationClass_;
 
 public:
-    CompressorStation(int id = 0);
+    explicit CompressorStation(int id = 0);
 
     int GetId() const;
     const std::string& GetName() const;
@@ -23,8 +23,8 @@ public:
     void Input();
     void Print() const;
     void EditWorkshop();
-    void Save(std::ofstream& file) const;
-    bool Load(std::ifstream& file);
+    friend std::ofstream& operator<<(std::ofstream& file, const CompressorStation& station);
+    friend std::ifstream& operator>>(std::ifstream& file, CompressorStation& station);
 };
 
 #endif
