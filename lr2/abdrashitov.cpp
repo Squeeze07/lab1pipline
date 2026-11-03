@@ -134,8 +134,7 @@ set<int> SearchPipes(const map<int, Pipe>& pipes)
     for (const auto& item : pipes)
     {
         const Pipe& pipe = item.second;
-        if ((filter == 1 && PipeByName(pipe, name)) ||
-            (filter == 2 && PipeByRepair(pipe, repair == 1)))
+        if ((filter == 1 && PipeByName(pipe, name)) || (filter == 2 && PipeByRepair(pipe, repair == 1)))
         {
             cout << pipe << '\n';
             found.insert(item.first);
@@ -177,8 +176,7 @@ void SearchStations(const map<int, CompressorStation>& stations)
     for (const auto& item : stations)
     {
         const CompressorStation& station = item.second;
-        if ((filter == 1 && StationByName(station, name)) ||
-            (filter == 2 && StationByIdlePercent(station, percent)))
+        if ((filter == 1 && StationByName(station, name)) || (filter == 2 && StationByIdlePercent(station, percent)))
         {
             cout << station << '\n';
             found++;
@@ -243,8 +241,7 @@ void BatchEditPipes(map<int, Pipe>& pipes)
     cout << "Обработано труб: " << chosen.size() << '\n';
 }
 
-void SaveData(const map<int, Pipe>& pipes, const map<int, CompressorStation>& stations,
-              int nextPipeId, int nextStationId)
+void SaveData(const map<int, Pipe>& pipes, const map<int, CompressorStation>& stations, int nextPipeId, int nextStationId)
 {
     cout << "Имя файла для сохранения: ";
     string filename = ReadText();
@@ -265,8 +262,7 @@ void SaveData(const map<int, Pipe>& pipes, const map<int, CompressorStation>& st
     LogAction("Сохранение в " + filename + (file.fail() ? ": ошибка записи" : ": успешно"));
 }
 
-void LoadData(map<int, Pipe>& pipes, map<int, CompressorStation>& stations,
-              int& nextPipeId, int& nextStationId)
+void LoadData(map<int, Pipe>& pipes, map<int, CompressorStation>& stations, int& nextPipeId, int& nextStationId)
 {
     cout << "Имя файла для загрузки: ";
     string filename = ReadText();
@@ -312,8 +308,7 @@ void LoadData(map<int, Pipe>& pipes, map<int, CompressorStation>& stations,
     {
         CompressorStation station;
         file >> station;
-        if (file.fail() || station.GetId() >= stationId ||
-            loadedStations.count(station.GetId()) != 0)
+        if (file.fail() || station.GetId() >= stationId || loadedStations.count(station.GetId()) != 0)
         {
             cout << "Данные станции повреждены.\n";
             LogAction("Загрузка " + filename + ": ошибка данных станции");

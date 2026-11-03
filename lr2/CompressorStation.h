@@ -7,14 +7,14 @@
 class CompressorStation
 {
 private:
-    int id_;
-    std::string name_;
-    int totalWorkshops_;
-    int workingWorkshops_;
-    int stationClass_;
+    int id;
+    std::string name;
+    int totalWorkshops;
+    int workingWorkshops;
+    int stationClass;
 
 public:
-    explicit CompressorStation(int id = 0);
+    explicit CompressorStation(int stationId = 0);
 
     int GetId() const;
     const std::string& GetName() const;

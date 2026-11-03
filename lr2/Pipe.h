@@ -7,14 +7,14 @@
 class Pipe
 {
 private:
-    int id_;
-    std::string name_;
-    double length_;
-    int diameter_;
-    bool underRepair_;
+    int id;
+    std::string name;
+    double length;
+    int diameter;
+    bool underRepair;
 
 public:
-    explicit Pipe(int id = 0);
+    explicit Pipe(int pipeId = 0);
 
     int GetId() const;
     const std::string& GetName() const;
