@@ -12,38 +12,40 @@ const string& Pipe::GetName() const { return name_; }
 bool Pipe::IsUnderRepair() const { return underRepair_; }
 void Pipe::SetRepair(bool value) { underRepair_ = value; }
 
-void Pipe::Input()
+istream& operator>>(istream& input, Pipe& pipe)
 {
     cout << "Название трубы: ";
-    name_ = ReadText();
+    pipe.name_ = ReadText(input);
     cout << "Длина в километрах: ";
-    length_ = ReadDouble();
-    while (length_ <= 0)
+    pipe.length_ = ReadDouble(input);
+    while (pipe.length_ <= 0)
     {
         cout << "Длина должна быть больше 0: ";
-        length_ = ReadDouble();
+        pipe.length_ = ReadDouble(input);
     }
     cout << "Диаметр в миллиметрах: ";
-    diameter_ = ReadInt();
-    while (diameter_ <= 0)
+    pipe.diameter_ = ReadInt(input);
+    while (pipe.diameter_ <= 0)
     {
         cout << "Диаметр должен быть больше 0: ";
-        diameter_ = ReadInt();
+        pipe.diameter_ = ReadInt(input);
     }
     cout << "В ремонте? (0 - нет, 1 - да): ";
-    int answer = ReadInt();
+    int answer = ReadInt(input);
     while (answer != 0 && answer != 1)
     {
         cout << "Введите 0 или 1: ";
-        answer = ReadInt();
+        answer = ReadInt(input);
     }
-    underRepair_ = answer == 1;
+    pipe.underRepair_ = answer == 1;
+    return input;
 }
 
-void Pipe::Print() const
+ostream& operator<<(ostream& output, const Pipe& pipe)
 {
-    cout << "Труба ID " << id_ << ": " << name_ << ", " << length_ << " км, "
-         << diameter_ << " мм, в ремонте: " << (underRepair_ ? "да" : "нет") << '\n';
+    output << "Труба ID " << pipe.id_ << ": " << pipe.name_ << ", " << pipe.length_ << " км, "
+           << pipe.diameter_ << " мм, в ремонте: " << (pipe.underRepair_ ? "да" : "нет");
+    return output;
 }
 
 ofstream& operator<<(ofstream& file, const Pipe& pipe)

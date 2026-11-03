@@ -21,8 +21,8 @@ public:
     bool IsUnderRepair() const;
     void SetRepair(bool value);
 
-    void Input();
-    void Print() const;
+    friend std::istream& operator>>(std::istream& input, Pipe& pipe);
+    friend std::ostream& operator<<(std::ostream& output, const Pipe& pipe);
     friend std::ofstream& operator<<(std::ofstream& file, const Pipe& pipe);
     friend std::ifstream& operator>>(std::ifstream& file, Pipe& pipe);
 };

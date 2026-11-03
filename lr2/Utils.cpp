@@ -6,50 +6,50 @@
 
 using namespace std;
 
-int ReadInt()
+int ReadInt(istream& input)
 {
     int value;
-    cin >> value;
-    if (cin.eof()) exit(0);
-    while (cin.fail() || cin.peek() != '\n')
+    input >> value;
+    if (input.eof()) exit(0);
+    while (input.fail() || input.peek() != '\n')
     {
-        cin.clear();
-        cin.ignore(10000, '\n');
+        input.clear();
+        input.ignore(10000, '\n');
         cout << "Ошибка. Введите целое число: ";
-        cin >> value;
-        if (cin.eof()) exit(0);
+        input >> value;
+        if (input.eof()) exit(0);
     }
-    cin.ignore(10000, '\n');
+    input.ignore(10000, '\n');
     return value;
 }
 
-double ReadDouble()
+double ReadDouble(istream& input)
 {
     double value;
-    cin >> value;
-    if (cin.eof()) exit(0);
-    while (cin.fail() || cin.peek() != '\n')
+    input >> value;
+    if (input.eof()) exit(0);
+    while (input.fail() || input.peek() != '\n')
     {
-        cin.clear();
-        cin.ignore(10000, '\n');
+        input.clear();
+        input.ignore(10000, '\n');
         cout << "Ошибка. Введите число: ";
-        cin >> value;
-        if (cin.eof()) exit(0);
+        input >> value;
+        if (input.eof()) exit(0);
     }
-    cin.ignore(10000, '\n');
+    input.ignore(10000, '\n');
     return value;
 }
 
-string ReadText()
+string ReadText(istream& input)
 {
     string text;
-    getline(cin, text);
-    if (cin.eof()) exit(0);
+    getline(input, text);
+    if (input.eof()) exit(0);
     while (text.empty())
     {
         cout << "Ошибка. Строка не должна быть пустой: ";
-        getline(cin, text);
-        if (cin.eof()) exit(0);
+        getline(input, text);
+        if (input.eof()) exit(0);
     }
     return text;
 }

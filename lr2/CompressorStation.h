@@ -20,8 +20,8 @@ public:
     const std::string& GetName() const;
     double GetIdlePercent() const;
 
-    void Input();
-    void Print() const;
+    friend std::istream& operator>>(std::istream& input, CompressorStation& station);
+    friend std::ostream& operator<<(std::ostream& output, const CompressorStation& station);
     void EditWorkshop();
     friend std::ofstream& operator<<(std::ofstream& file, const CompressorStation& station);
     friend std::ifstream& operator>>(std::ifstream& file, CompressorStation& station);

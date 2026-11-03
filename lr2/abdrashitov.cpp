@@ -34,9 +34,9 @@ bool StationByIdlePercent(const CompressorStation& station, double percent)
 void PrintAll(const map<int, Pipe>& pipes, const map<int, CompressorStation>& stations)
 {
     if (pipes.empty()) cout << "Труб нет.\n";
-    for (const auto& item : pipes) item.second.Print();
+    for (const auto& item : pipes) cout << item.second << '\n';
     if (stations.empty()) cout << "Станций нет.\n";
-    for (const auto& item : stations) item.second.Print();
+    for (const auto& item : stations) cout << item.second << '\n';
 }
 
 void EditPipe(map<int, Pipe>& pipes)
@@ -137,7 +137,7 @@ set<int> SearchPipes(const map<int, Pipe>& pipes)
         if ((filter == 1 && PipeByName(pipe, name)) ||
             (filter == 2 && PipeByRepair(pipe, repair == 1)))
         {
-            pipe.Print();
+            cout << pipe << '\n';
             found.insert(item.first);
         }
     }
@@ -180,7 +180,7 @@ void SearchStations(const map<int, CompressorStation>& stations)
         if ((filter == 1 && StationByName(station, name)) ||
             (filter == 2 && StationByIdlePercent(station, percent)))
         {
-            station.Print();
+            cout << station << '\n';
             found++;
         }
     }
@@ -353,7 +353,7 @@ int main()
             case 1:
             {
                 Pipe pipe(nextPipeId);
-                pipe.Input();
+                cin >> pipe;
                 pipes.emplace(nextPipeId, pipe);
                 LogAction("Добавлена труба ID " + to_string(nextPipeId));
                 nextPipeId++;
@@ -362,7 +362,7 @@ int main()
             case 2:
             {
                 CompressorStation station(nextStationId);
-                station.Input();
+                cin >> station;
                 stations.emplace(nextStationId, station);
                 LogAction("Добавлена станция ID " + to_string(nextStationId));
                 nextStationId++;

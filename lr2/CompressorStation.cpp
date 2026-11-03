@@ -16,37 +16,39 @@ double CompressorStation::GetIdlePercent() const
     return 100.0 * (totalWorkshops_ - workingWorkshops_) / totalWorkshops_;
 }
 
-void CompressorStation::Input()
+istream& operator>>(istream& input, CompressorStation& station)
 {
     cout << "Название станции: ";
-    name_ = ReadText();
+    station.name_ = ReadText(input);
     cout << "Всего цехов: ";
-    totalWorkshops_ = ReadInt();
-    while (totalWorkshops_ <= 0)
+    station.totalWorkshops_ = ReadInt(input);
+    while (station.totalWorkshops_ <= 0)
     {
         cout << "Количество должно быть больше 0: ";
-        totalWorkshops_ = ReadInt();
+        station.totalWorkshops_ = ReadInt(input);
     }
     cout << "Работающих цехов: ";
-    workingWorkshops_ = ReadInt();
-    while (workingWorkshops_ < 0 || workingWorkshops_ > totalWorkshops_)
+    station.workingWorkshops_ = ReadInt(input);
+    while (station.workingWorkshops_ < 0 || station.workingWorkshops_ > station.totalWorkshops_)
     {
-        cout << "Введите число от 0 до " << totalWorkshops_ << ": ";
-        workingWorkshops_ = ReadInt();
+        cout << "Введите число от 0 до " << station.totalWorkshops_ << ": ";
+        station.workingWorkshops_ = ReadInt(input);
     }
     cout << "Класс станции: ";
-    stationClass_ = ReadInt();
-    while (stationClass_ <= 0)
+    station.stationClass_ = ReadInt(input);
+    while (station.stationClass_ <= 0)
     {
         cout << "Класс должен быть больше 0: ";
-        stationClass_ = ReadInt();
+        station.stationClass_ = ReadInt(input);
     }
+    return input;
 }
 
-void CompressorStation::Print() const
+ostream& operator<<(ostream& output, const CompressorStation& station)
 {
-    cout << "КС ID " << id_ << ": " << name_ << ", цехов " << totalWorkshops_
-         << ", работают " << workingWorkshops_ << ", класс " << stationClass_ << '\n';
+    output << "КС ID " << station.id_ << ": " << station.name_ << ", цехов " << station.totalWorkshops_
+           << ", работают " << station.workingWorkshops_ << ", класс " << station.stationClass_;
+    return output;
 }
 
 void CompressorStation::EditWorkshop()
