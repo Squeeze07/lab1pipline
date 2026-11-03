@@ -1,4 +1,7 @@
-#include <cstdlib>
+#include "CompressorStation.h"
+#include "Pipe.h"
+#include "Utils.h"
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -6,168 +9,11 @@
 
 using namespace std;
 
-struct Pipe
-{
-    int id = 0;
-    string name;
-    double length = 0;
-    int diameter = 0;
-    bool isUnderRepair = false;
-};
-
-struct CompressorStation
-{
-    int id = 0;
-    string name;
-    int totalWorkshops = 0;
-    int workingWorkshops = 0;
-    int stationClass = 0;
-};
-
-// Запись действий в отдельный файл, чтобы можно было проследить работу программы.
-void LogAction(const string& message)
-{
-    ofstream log("actions.log", ios::app);
-    if (log.is_open())
-    {
-        log << message << '\n';
-    }
-}
-
-int ReadInt()
-{
-    int value;
-    cin >> value;
-    if (cin.eof()) exit(0);
-    while (cin.fail() || cin.peek() != '\n')
-    {
-        cin.clear();
-        cin.ignore(10000, '\n');
-        cout << "Ошибка. Введите целое число: ";
-        cin >> value;
-        if (cin.eof()) exit(0);
-    }
-    cin.ignore(10000, '\n');
-    return value;
-}
-
-double ReadDouble()
-{
-    double value;
-    cin >> value;
-    if (cin.eof()) exit(0);
-    while (cin.fail() || cin.peek() != '\n')
-    {
-        cin.clear();
-        cin.ignore(10000, '\n');
-        cout << "Ошибка. Введите число: ";
-        cin >> value;
-        if (cin.eof()) exit(0);
-    }
-    cin.ignore(10000, '\n');
-    return value;
-}
-
-string ReadText()
-{
-    string text;
-    getline(cin, text);
-    if (cin.eof()) exit(0);
-    while (text.empty())
-    {
-        cout << "Ошибка. Строка не должна быть пустой: ";
-        getline(cin, text);
-        if (cin.eof()) exit(0);
-    }
-    return text;
-}
-
-Pipe InputPipe(int id)
-{
-    Pipe pipe;
-    pipe.id = id;
-    cout << "Название трубы: ";
-    pipe.name = ReadText();
-    cout << "Длина в километрах: ";
-    pipe.length = ReadDouble();
-    while (pipe.length <= 0)
-    {
-        cout << "Длина должна быть больше 0: ";
-        pipe.length = ReadDouble();
-    }
-    cout << "Диаметр в миллиметрах: ";
-    pipe.diameter = ReadInt();
-    while (pipe.diameter <= 0)
-    {
-        cout << "Диаметр должен быть больше 0: ";
-        pipe.diameter = ReadInt();
-    }
-    cout << "В ремонте? (0 - нет, 1 - да): ";
-    int answer = ReadInt();
-    while (answer != 0 && answer != 1)
-    {
-        cout << "Введите 0 или 1: ";
-        answer = ReadInt();
-    }
-    pipe.isUnderRepair = answer == 1;
-    return pipe;
-}
-
-CompressorStation InputStation(int id)
-{
-    CompressorStation station;
-    station.id = id;
-    cout << "Название станции: ";
-    station.name = ReadText();
-    cout << "Всего цехов: ";
-    station.totalWorkshops = ReadInt();
-    while (station.totalWorkshops <= 0)
-    {
-        cout << "Количество должно быть больше 0: ";
-        station.totalWorkshops = ReadInt();
-    }
-    cout << "Работающих цехов: ";
-    station.workingWorkshops = ReadInt();
-    while (station.workingWorkshops < 0 || station.workingWorkshops > station.totalWorkshops)
-    {
-        cout << "Введите число от 0 до " << station.totalWorkshops << ": ";
-        station.workingWorkshops = ReadInt();
-    }
-    cout << "Класс станции: ";
-    station.stationClass = ReadInt();
-    while (station.stationClass <= 0)
-    {
-        cout << "Класс должен быть больше 0: ";
-        station.stationClass = ReadInt();
-    }
-    return station;
-}
-
-void PrintPipe(const Pipe& pipe)
-{
-    cout << "Труба ID " << pipe.id << ": " << pipe.name << ", " << pipe.length << " км, "
-         << pipe.diameter << " мм, в ремонте: " << (pipe.isUnderRepair ? "да" : "нет") << '\n';
-}
-
-void PrintStation(const CompressorStation& station)
-{
-    cout << "КС ID " << station.id << ": " << station.name << ", цехов " << station.totalWorkshops
-         << ", работают " << station.workingWorkshops << ", класс " << station.stationClass << '\n';
-}
-
-void PrintAll(const vector<Pipe>& pipes, const vector<CompressorStation>& stations)
-{
-    if (pipes.empty()) cout << "Труб нет.\n";
-    for (const Pipe& pipe : pipes) PrintPipe(pipe);
-    if (stations.empty()) cout << "Станций нет.\n";
-    for (const CompressorStation& station : stations) PrintStation(station);
-}
-
 int FindPipe(const vector<Pipe>& pipes, int id)
 {
     for (int i = 0; i < static_cast<int>(pipes.size()); i++)
     {
-        if (pipes[i].id == id) return i;
+        if (pipes[i].GetId() == id) return i;
     }
     return -1;
 }
@@ -176,9 +22,17 @@ int FindStation(const vector<CompressorStation>& stations, int id)
 {
     for (int i = 0; i < static_cast<int>(stations.size()); i++)
     {
-        if (stations[i].id == id) return i;
+        if (stations[i].GetId() == id) return i;
     }
     return -1;
+}
+
+void PrintAll(const vector<Pipe>& pipes, const vector<CompressorStation>& stations)
+{
+    if (pipes.empty()) cout << "Труб нет.\n";
+    for (const Pipe& pipe : pipes) pipe.Print();
+    if (stations.empty()) cout << "Станций нет.\n";
+    for (const CompressorStation& station : stations) station.Print();
 }
 
 void EditPipe(vector<Pipe>& pipes)
@@ -199,7 +53,7 @@ void EditPipe(vector<Pipe>& pipes)
         cout << "Введите 0 или 1: ";
         answer = ReadInt();
     }
-    pipes[index].isUnderRepair = answer == 1;
+    pipes[index].SetRepair(answer == 1);
     LogAction("Изменена труба ID " + to_string(id) + ", ремонт: " + to_string(answer));
 }
 
@@ -214,25 +68,7 @@ void EditStation(vector<CompressorStation>& stations)
         LogAction("Изменение станции ID " + to_string(id) + ": не найдена");
         return;
     }
-    cout << "1 - запустить цех, 2 - остановить: ";
-    int action = ReadInt();
-    if (action == 1 && stations[index].workingWorkshops < stations[index].totalWorkshops)
-    {
-        stations[index].workingWorkshops++;
-        cout << "Цех запущен.\n";
-        LogAction("Запущен цех станции ID " + to_string(id));
-    }
-    else if (action == 2 && stations[index].workingWorkshops > 0)
-    {
-        stations[index].workingWorkshops--;
-        cout << "Цех остановлен.\n";
-        LogAction("Остановлен цех станции ID " + to_string(id));
-    }
-    else
-    {
-        cout << "Невозможно выполнить действие.\n";
-        LogAction("Изменение станции ID " + to_string(id) + ": невозможно");
-    }
+    stations[index].EditWorkshop();
 }
 
 void DeletePipe(vector<Pipe>& pipes)
@@ -275,7 +111,7 @@ vector<int> SearchPipes(const vector<Pipe>& pipes)
     int repair = 0;
     if (filter == 1)
     {
-        cout << "Название: ";
+        cout << "Название или его часть: ";
         name = ReadText();
     }
     else if (filter == 2)
@@ -297,10 +133,11 @@ vector<int> SearchPipes(const vector<Pipe>& pipes)
     vector<int> found;
     for (const Pipe& pipe : pipes)
     {
-        if ((filter == 1 && pipe.name.find(name) != string::npos) || (filter == 2 && pipe.isUnderRepair == (repair == 1)))
+        if ((filter == 1 && pipe.GetName().find(name) != string::npos) ||
+            (filter == 2 && pipe.IsUnderRepair() == (repair == 1)))
         {
-            PrintPipe(pipe);
-            found.push_back(pipe.id);
+            pipe.Print();
+            found.push_back(pipe.GetId());
         }
     }
     cout << "Найдено труб: " << found.size() << '\n';
@@ -316,7 +153,7 @@ void SearchStations(const vector<CompressorStation>& stations)
     double percent = 0;
     if (filter == 1)
     {
-        cout << "Название: ";
+        cout << "Название или его часть: ";
         name = ReadText();
     }
     else if (filter == 2)
@@ -338,10 +175,10 @@ void SearchStations(const vector<CompressorStation>& stations)
     int found = 0;
     for (const CompressorStation& station : stations)
     {
-        double idlePercent = 100.0 * (station.totalWorkshops - station.workingWorkshops) / station.totalWorkshops;
-        if ((filter == 1 && station.name.find(name) != string::npos) || (filter == 2 && idlePercent >= percent))
+        if ((filter == 1 && station.GetName().find(name) != string::npos) ||
+            (filter == 2 && station.GetIdlePercent() >= percent))
         {
-            PrintStation(station);
+            station.Print();
             found++;
         }
     }
@@ -355,7 +192,7 @@ void BatchEditPipes(vector<Pipe>& pipes)
     if (found.empty())
     {
         cout << "Трубы не найдены.\n";
-        LogAction("Пакетное изменение: трубы не найдены");
+        LogAction("Пакетное действие: трубы не найдены");
         return;
     }
     cout << "1 - все найденные, 0 - выбрать по ID: ";
@@ -366,10 +203,7 @@ void BatchEditPipes(vector<Pipe>& pipes)
         all = ReadInt();
     }
     vector<int> chosen;
-    if (all == 1)
-    {
-        chosen = found;
-    }
+    if (all == 1) chosen = found;
     else
     {
         cout << "Вводите ID нужных труб, 0 - закончить.\n";
@@ -385,7 +219,7 @@ void BatchEditPipes(vector<Pipe>& pipes)
             if (!inFound || alreadyChosen)
             {
                 cout << "ID нет среди найденных или он уже выбран.\n";
-                LogAction("Пакетное изменение: отклонён ID " + to_string(id));
+                LogAction("Пакетное действие: отклонён ID " + to_string(id));
                 continue;
             }
             chosen.push_back(id);
@@ -394,7 +228,7 @@ void BatchEditPipes(vector<Pipe>& pipes)
     if (chosen.empty())
     {
         cout << "Ничего не выбрано.\n";
-        LogAction("Пакетное изменение: ничего не выбрано");
+        LogAction("Пакетное действие: ничего не выбрано");
         return;
     }
     cout << "1 - убрать из ремонта, 2 - отправить в ремонт, 3 - удалить: ";
@@ -408,13 +242,14 @@ void BatchEditPipes(vector<Pipe>& pipes)
     {
         int index = FindPipe(pipes, id);
         if (action == 3) pipes.erase(pipes.begin() + index);
-        else pipes[index].isUnderRepair = action == 2;
+        else pipes[index].SetRepair(action == 2);
         LogAction("Пакетное действие " + to_string(action) + " с трубой ID " + to_string(id));
     }
     cout << "Обработано труб: " << chosen.size() << '\n';
 }
 
-void SaveData(const vector<Pipe>& pipes, const vector<CompressorStation>& stations, int nextPipeId, int nextStationId)
+void SaveData(const vector<Pipe>& pipes, const vector<CompressorStation>& stations,
+              int nextPipeId, int nextStationId)
 {
     cout << "Имя файла для сохранения: ";
     string filename = ReadText();
@@ -427,24 +262,17 @@ void SaveData(const vector<Pipe>& pipes, const vector<CompressorStation>& statio
     }
     file << nextPipeId << ' ' << nextStationId << '\n';
     file << pipes.size() << '\n';
-    for (const Pipe& pipe : pipes)
-    {
-        file << pipe.id << '\n' << pipe.name << '\n' << pipe.length << '\n'
-             << pipe.diameter << '\n' << pipe.isUnderRepair << '\n';
-    }
+    for (const Pipe& pipe : pipes) pipe.Save(file);
     file << stations.size() << '\n';
-    for (const CompressorStation& station : stations)
-    {
-        file << station.id << '\n' << station.name << '\n' << station.totalWorkshops << '\n'
-             << station.workingWorkshops << '\n' << station.stationClass << '\n';
-    }
+    for (const CompressorStation& station : stations) station.Save(file);
     file.close();
     if (file.fail()) cout << "Ошибка записи файла.\n";
     else cout << "Данные сохранены.\n";
     LogAction("Сохранение в " + filename + (file.fail() ? ": ошибка записи" : ": успешно"));
 }
 
-void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, int& nextPipeId, int& nextStationId)
+void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations,
+              int& nextPipeId, int& nextStationId)
 {
     cout << "Имя файла для загрузки: ";
     string filename = ReadText();
@@ -469,22 +297,13 @@ void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, int& nex
     for (int i = 0; i < pipeCount; i++)
     {
         Pipe pipe;
-        int repair;
-        file >> pipe.id;
-        file.ignore(10000, '\n');
-        getline(file, pipe.name);
-        file >> pipe.length >> pipe.diameter >> repair;
-        if (file.fail() || pipe.id <= 0 || pipe.id >= pipeId || pipe.name.empty() ||
-            pipe.length <= 0 || pipe.diameter <= 0 || (repair != 0 && repair != 1) ||
-            FindPipe(loadedPipes, pipe.id) != -1)
+        if (!pipe.Load(file) || pipe.GetId() >= pipeId || FindPipe(loadedPipes, pipe.GetId()) != -1)
         {
             cout << "Данные трубы повреждены.\n";
             LogAction("Загрузка " + filename + ": ошибка данных трубы");
             return;
         }
-        pipe.isUnderRepair = repair == 1;
         loadedPipes.push_back(pipe);
-        file.ignore(10000, '\n');
     }
     file >> stationCount;
     if (file.fail() || stationCount < 0 || stationCount > 100000)
@@ -497,21 +316,14 @@ void LoadData(vector<Pipe>& pipes, vector<CompressorStation>& stations, int& nex
     for (int i = 0; i < stationCount; i++)
     {
         CompressorStation station;
-        file >> station.id;
-        file.ignore(10000, '\n');
-        getline(file, station.name);
-        file >> station.totalWorkshops >> station.workingWorkshops >> station.stationClass;
-        if (file.fail() || station.id <= 0 || station.id >= stationId || station.name.empty() ||
-            station.totalWorkshops <= 0 || station.workingWorkshops < 0 ||
-            station.workingWorkshops > station.totalWorkshops || station.stationClass <= 0 ||
-            FindStation(loadedStations, station.id) != -1)
+        if (!station.Load(file) || station.GetId() >= stationId ||
+            FindStation(loadedStations, station.GetId()) != -1)
         {
             cout << "Данные станции повреждены.\n";
             LogAction("Загрузка " + filename + ": ошибка данных станции");
             return;
         }
         loadedStations.push_back(station);
-        file.ignore(10000, '\n');
     }
     pipes = loadedPipes;
     stations = loadedStations;
@@ -525,7 +337,7 @@ void PrintMenu()
 {
     cout << "\n1. Добавить трубу\n2. Добавить КС\n3. Показать все объекты\n";
     cout << "4. Изменить трубу\n5. Изменить КС\n6. Удалить трубу\n7. Удалить КС\n";
-    cout << "8. Найти трубы\n9. Найти КС\n10. Пакетно изменить трубы\n";
+    cout << "8. Найти трубы\n9. Найти КС\n10. Пакетное действие с трубами\n";
     cout << "11. Сохранить\n12. Загрузить\n0. Выход\nВыберите действие: ";
 }
 
@@ -543,15 +355,23 @@ int main()
         switch (action)
         {
             case 1:
-                pipes.push_back(InputPipe(nextPipeId));
+            {
+                Pipe pipe(nextPipeId);
+                pipe.Input();
+                pipes.push_back(pipe);
                 LogAction("Добавлена труба ID " + to_string(nextPipeId));
                 nextPipeId++;
                 break;
+            }
             case 2:
-                stations.push_back(InputStation(nextStationId));
+            {
+                CompressorStation station(nextStationId);
+                station.Input();
+                stations.push_back(station);
                 LogAction("Добавлена станция ID " + to_string(nextStationId));
                 nextStationId++;
                 break;
+            }
             case 3: PrintAll(pipes, stations); break;
             case 4: EditPipe(pipes); break;
             case 5: EditStation(stations); break;
